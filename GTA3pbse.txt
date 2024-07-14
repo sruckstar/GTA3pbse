@@ -1,0 +1,262 @@
+{$CLEO}
+0000:
+
+const
+scplayer = $player_actor
+on_mission_flag = $onmission
+temvar_float_x = 0@
+temvar_float_y = 1@
+temvar_float_z = 2@
+tempvar_int = 3@
+tempvar_car = 4@
+tempvar_actor = 5@
+last_health = 6@
+current_health = 7@
+shit_flag = 8@
+tempvar_float = 9@
+fall_flag = 10@
+taxi_flag = 11@
+end
+
+last_health = -1
+
+while true
+wait 0
+if
+    0256:   player 0 defined 
+then
+
+    // Get start health
+    if
+        last_health == -1
+    then
+        0226: last_health = actor scplayer health 
+    end        
+
+    // Get out a car!
+    0054: store_player $player_char position_to temvar_float_x temvar_float_y temvar_float_z
+    if and
+        05F0: tempvar_car = random_vehicle_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 5.0 find_next 0 pass_wrecked 1 //IF and SET 
+        05EF: tempvar_actor = random_actor_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 5.0 find_next 0 pass_deads 1 //IF and SET
+    then
+        if and
+            8137:   not car tempvar_car id == #TRAIN
+            0448:   actor tempvar_actor in_car tempvar_car         
+            01FD:   player 0 near_car_on_foot tempvar_car radius 3.0 3.0 0
+            80DF:   not actor scplayer driving
+        then
+            if or
+                05EE:   key_pressed 13 //VK_... 
+                05EE:   key_pressed 70 //VK_...
+            then
+                0AAD: stop_audio_stream 
+                0AAC: play_audio_stream_1channel "audio\getoutacar.wav" loop 0 volume 0.5  
+                wait 3000  
+            end
+        end
+    end
+end
+    
+    // GIVE ME YOUR MONEY!
+    0054: store_player 0 position_to temvar_float_x temvar_float_y temvar_float_z 
+    0209: tempvar_int = random_int 1 100
+    if and
+        05EF: tempvar_actor = random_actor_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 5.0 find_next 0 pass_deads 1 //IF and SET 
+        tempvar_int == 57
+    then
+        if
+            05EE:   key_pressed 1 //VK_...
+        then
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\givemeyourmoney.wav" loop 0 volume 0.5
+        end
+    end
+    
+    // OH JESUS!!!
+    0226: current_health = actor scplayer health
+    if
+        001B:   last_health > current_health // integer values
+    then
+        0209: tempvar_int = random_int 1 50 
+        if
+            tempvar_int > 30
+        then
+            0209: tempvar_int = random_int 1 4
+            
+            if
+                tempvar_int == 1
+            then
+               0AAD: stop_audio_stream 
+               0AAC: play_audio_stream_1channel "audio\ohjesus.wav" loop 0 volume 0.5
+            else
+                if
+                    tempvar_int == 2
+                then
+                    0AAD: stop_audio_stream 
+                    0AAC: play_audio_stream_1channel "audio\oi.wav" loop 0 volume 0.5
+                else
+                    if
+                        tempvar_int == 3
+                    then
+                        0AAD: stop_audio_stream 
+                        0AAC: play_audio_stream_1channel "audio\peaceofshit.wav" loop 0 volume 0.5
+                    end
+                end
+            end                  
+            0226: last_health = actor scplayer health   
+        end
+    end  
+    
+    // Shit ON
+    if and
+        010F:   player $player_char wanted_level > 0
+        shit_flag == 0
+    then
+        0209: tempvar_int = random_int 1 3
+        if
+            tempvar_int == 1
+        then
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\hscrewuasshole.wav" loop 0 volume 0.5
+        else
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\kissmyass.wav" loop 0 volume 0.5    
+        end
+        shit_flag = 1
+    end
+    
+    // Shit OFF
+    01C0: tempvar_int = player $PLAYER_CHAR wanted_level
+    if and
+        tempvar_int == 0
+        shit_flag == 1
+    then
+        shit_flag = 0
+    end
+    
+    // WTF??!? WOAW!
+    0209: tempvar_int = random_int 1 10         
+    00A0: store_actor scplayer position_to temvar_float_x temvar_float_y temvar_float_z
+    02CE: tempvar_float = ground_z temvar_float_x temvar_float_y temvar_float_z
+    0067: temvar_float_z -= tempvar_float
+    if and
+        tempvar_int == 7 
+        temvar_float_z >= 4.0 
+        fall_flag == 0
+    then
+        0209: tempvar_int = random_int 1 3
+        if 
+            tempvar_int == 1
+        then
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\whata.wav" loop 0 volume 0.5
+        else
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\woaw.wav" loop 0 volume 0.5
+        end
+        fall_flag = 1
+    end
+    
+    //Dead shit
+    if
+        0118:   actor scplayer dead
+    then
+        0AAD: stop_audio_stream 
+        0AAC: play_audio_stream_1channel "audio\shit.wav" loop 0 volume 0.5
+        
+        while 0118: actor scplayer dead
+            wait 0
+        end
+    end
+    
+    // Taxi!
+    0054: store_player 0 position_to temvar_float_x temvar_float_y temvar_float_z 
+    if and
+        05F0: tempvar_car = random_vehicle_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 3.0 find_next 0 pass_wrecked 1 //IF and SET 
+        05EF: tempvar_actor = random_actor_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 3.0 find_next 0 pass_deads 1 //IF and SET 
+    then
+        0209: tempvar_int = random_int 1 50
+        if and
+            0137: car tempvar_car id == #TAXI
+            tempvar_int == 27 
+            taxi_flag == 0
+        then
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\taxi.wav" loop 0 volume 0.5 
+            taxi_flag = 1
+        else
+            if
+                taxi_flag == 1
+            then
+                taxi_flag = 0
+            end
+        end
+    end
+    
+    // BURP and FART :D
+    if
+        05EE:   key_pressed 9 //VK_...
+    then
+        0209: tempvar_int = random_int 1 3
+        if
+            tempvar_int == 1
+        then
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\SFX_BURP.wav" loop 0 volume 0.5
+        else
+            0AAD: stop_audio_stream 
+            0AAC: play_audio_stream_1channel "audio\SFX_FART.wav" loop 0 volume 0.5
+        end
+        
+        0054: store_player 0 position_to temvar_float_x temvar_float_y temvar_float_z
+        if 
+            05EF: tempvar_actor = random_actor_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 3.0 find_next 0 pass_deads 1 //IF and SET 
+        then
+            01C0: tempvar_int = player $PLAYER_CHAR wanted_level
+            if and
+                02F2: IS_CHAR_MODEL tempvar_actor #COP
+                tempvar_int == 0 
+            then
+                010D: set_player $player_char wanted_level_to 1 
+            else
+                0209: tempvar_int = random_int 1 10
+                if and
+                    tempvar_int == 5
+                    82F2: not IS_CHAR_MODEL tempvar_actor #COP
+                then
+                    01C9: actor tempvar_actor kill_actor scplayer
+                end 
+            end
+        end
+        
+        while 05EE:   key_pressed 9 //VK_...
+            wait 0
+        end   
+    end 
+    
+    // Hey, watch it buddy!
+    0054: store_player 0 position_to temvar_float_x temvar_float_y temvar_float_z
+    if 
+        05EF: tempvar_actor = random_actor_near_point temvar_float_x temvar_float_y temvar_float_z in_radius 1.0 find_next 0 pass_deads 1 //IF and SET 
+    then
+        00A0: store_actor tempvar_actor position_to temvar_float_x temvar_float_y temvar_float_z 
+        if
+            00E4:   player 0 0 temvar_float_x temvar_float_y temvar_float_z radius 0.1 0.1
+        then
+            0209: tempvar_int = random_int 1 5
+            if
+                tempvar_int == 1
+            then
+                0AAD: stop_audio_stream 
+                0AAC: play_audio_stream_1channel "audio\heey.wav" loop 0 volume 0.5
+            else
+                0AAD: stop_audio_stream 
+                0AAC: play_audio_stream_1channel "audio\heywatchitbuddy.wav" loop 0 volume 0.5
+            end
+            
+             while 00E4:   player 0 0 temvar_float_x temvar_float_y temvar_float_z radius 4.0 4.0
+                wait 0
+            end 
+        end
+    end             
+end
